@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-CYBER-TERMINAL HUB (v2.0)
-Un panel interactivo para consola escrito en Python puro (sin librerías externas).
-Fácilmente extensible: añade tus propias herramientas agregando un método en la clase CLIHub.
+CYBER-TERMINAL HUB (v2.1)
+Un panel interactivo para consola escrito en Python puro.
+Incluye minijuego de hackeo interactivo en la Opción 5.
 """
 
 import os
@@ -25,8 +25,6 @@ class Colors:
     MAGENTA = "\033[95m"
     CYAN = "\033[96m"
     WHITE = "\033[97m"
-    BG_CYAN = "\033[46m"
-    BG_DARK = "\033[40m"
 
 class CyberTerminal:
     DATA_FILE = "hub_data.json"
@@ -50,7 +48,7 @@ class CyberTerminal:
         print(banner)
 
     # -------------------------------------------------------------------------
-    # PERSISTENCIA DE DATOS (Fácil de modificar o extender)
+    # PERSISTENCIA DE DATOS
     # -------------------------------------------------------------------------
     def _load_data(self) -> dict:
         if os.path.exists(self.DATA_FILE):
@@ -59,7 +57,7 @@ class CyberTerminal:
                     return json.load(f)
             except Exception:
                 pass
-        return {"tasks": [], "notes": []}
+        return {"tasks": []}
 
     def _save_data(self):
         with open(self.DATA_FILE, 'w') as f:
@@ -68,6 +66,50 @@ class CyberTerminal:
     # -------------------------------------------------------------------------
     # MODULOS DEL SISTEMA
     # -------------------------------------------------------------------------
+
+    def module_juego(self):
+        """Mini-juego interactivo: Cyber Hack (Adivina la contraseña de acceso)."""
+        self.clear_screen()
+        print(f"{Colors.CYAN}{Colors.BOLD}=== MINIJUEGO: CYBER HACK ==={Colors.RESET}\n")
+        print(f"{Colors.YELLOW}Encuentra la contraseña correcta para vulnerar el sistema.{Colors.RESET}")
+        print(f"{Colors.DIM}El sistema te dará coincidencias (letras en la misma posición correcta).\n{Colors.RESET}")
+
+        dictionary = [
+            "SECURITY", "TERMINAL", "OVERRIDE", "FIREWALL", 
+            "HARDWARE", "PROTOCOL", "DATABASE", "ENCRYPTS", 
+            "SOFTWARE", "PASSWORD", "NETWORKS", "ABSOLUTE"
+        ]
+        
+        candidates = random.sample(dictionary, 6)
+        secret = random.choice(candidates)
+        attempts = 4
+
+        print(f"{Colors.BOLD}Bloques de memoria detectados:{Colors.RESET}")
+        for w in candidates:
+            print(f"  > {Colors.CYAN}{w}{Colors.RESET}")
+        print()
+
+        while attempts > 0:
+            print(f"Intentos de acceso restantes: {Colors.RED}{'█ ' * attempts}{Colors.RESET}")
+            guess = input(f"{Colors.BOLD}Ingresa la clave > {Colors.RESET}").strip().upper()
+
+            if guess not in candidates:
+                print(f"{Colors.YELLOW}⚠ Palabra no válida en la memoria. Elige de la lista.{Colors.RESET}\n")
+                continue
+
+            if guess == secret:
+                print(f"\n{Colors.GREEN}{Colors.BOLD}🔓 ¡ACCESO CONCEDIDO! Sistema hackeado con éxito. 🎉{Colors.RESET}")
+                break
+            else:
+                attempts -= 1
+                # Cuenta letras en la posición exactas
+                matches = sum(1 for a, b in zip(guess, secret) if a == b)
+                print(f"{Colors.RED}❌ Acceso denegado.{Colors.RESET} Coincidencias de posición: {Colors.CYAN}{matches}/{len(secret)}{Colors.RESET}\n")
+
+        if attempts == 0:
+            print(f"{Colors.RED}{Colors.BOLD}💥 ¡SISTEMA BLOQUEADO! La contraseña era: {secret}{Colors.RESET}")
+
+        input(f"\n{Colors.DIM}Presiona Enter para volver al menú...{Colors.RESET}")
 
     def module_matrix_rain(self):
         """Efecto Matrix Rain en terminal."""
@@ -133,7 +175,7 @@ class CyberTerminal:
         input("\nPresiona Enter para continuar...")
 
     def module_task_manager(self):
-        """Gestor de tareas rápido con guardado automático."""
+        """Gestor de tareas rápido."""
         while True:
             self.clear_screen()
             print(f"{Colors.MAGENTA}{Colors.BOLD}=== GESTOR DE TAREAS ==={Colors.RESET}\n")
@@ -157,7 +199,7 @@ class CyberTerminal:
                     self._save_data()
             elif choice == 'c':
                 try:
-                    num = int(input("Número de tarea a marcar/desmarcar: ")) - 1
+                    num = int(input("Número de tarea: ")) - 1
                     if 0 <= num < len(tasks):
                         tasks[num]["done"] = not tasks[num]["done"]
                         self._save_data()
@@ -175,27 +217,25 @@ class CyberTerminal:
                 break
 
     def module_system_scanner(self):
-        """Simulador visual de escáner de red / diagnóstico."""
+        """Diagnóstico de sistema."""
         self.clear_screen()
-        print(f"{Colors.CYAN}{Colors.BOLD}=== DIAGNÓSTICO DE SISTEMA Y RED ==={Colors.RESET}\n")
+        print(f"{Colors.CYAN}{Colors.BOLD}=== DIAGNÓSTICO DE SISTEMA ==={Colors.RESET}\n")
         
         steps = [
             "Inicializando adaptadores de red...",
             "Analizando latencia a servidores locales...",
-            "Verificando integridad del kernel de consola...",
-            "Optimizando espacio de memoria RAM en buffer...",
-            "Sincronizando reloj del sistema...",
-            "Validando cifrado de variables de entorno..."
+            "Verificando integridad del kernel...",
+            "Optimizando espacio de memoria RAM..."
         ]
 
         for step in steps:
             sys.stdout.write(f"{Colors.YELLOW}[...] {step}{Colors.RESET}")
             sys.stdout.flush()
-            time.sleep(random.uniform(0.3, 0.7))
+            time.sleep(random.uniform(0.3, 0.6))
             sys.stdout.write(f"\r{Colors.GREEN}[OK]  {step}{Colors.RESET}\n")
             sys.stdout.flush()
 
-        print(f"\n{Colors.GREEN}{Colors.BOLD}✔ Diagnóstico completado. 0 errores detectados.{Colors.RESET}")
+        print(f"\n{Colors.GREEN}{Colors.BOLD}✔ Diagnóstico completado.{Colors.RESET}")
         input("\nPresiona Enter para continuar...")
 
     # -------------------------------------------------------------------------
@@ -203,13 +243,13 @@ class CyberTerminal:
     # -------------------------------------------------------------------------
 
     def run(self):
-        # Puedes agregar tus propias funciones aquí en este menú
         options = {
             "1": ("Gestor de Tareas", self.module_task_manager),
             "2": ("Temporizador Pomodoro", self.module_pomodoro_timer),
             "3": ("Diagnóstico de Sistema", self.module_system_scanner),
             "4": ("Efecto Matrix Rain", self.module_matrix_rain),
-            "5": ("Salir", None)
+            "5": ("Juego: Cyber Hack", self.module_juego),
+            "6": ("Salir", None)
         }
 
         while self.running:
@@ -222,10 +262,10 @@ class CyberTerminal:
                 print(f"  {Colors.CYAN}{Colors.BOLD}[{key}]{Colors.RESET} {label}")
             print()
 
-            cmd = input(f"{Colors.BOLD}Selecciona una opción (1-5): {Colors.RESET}").strip()
+            cmd = input(f"{Colors.BOLD}Selecciona una opción (1-6): {Colors.RESET}").strip()
 
             if cmd in options:
-                if cmd == "5":
+                if cmd == "6":
                     self.clear_screen()
                     print(f"{Colors.CYAN}¡Hasta luego!{Colors.RESET}\n")
                     self.running = False
